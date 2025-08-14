@@ -1,7 +1,23 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('login');
 });
+
+
+Route::get('/dashboard', [Controllers\DashboardController::class, 'index'])->name('dashboard');
+
+Route::get('/login', [Controllers\DashboardController::class, 'index']);
+Route::post('/logout', [Controllers\DashboardController::class, 'index']);
+
+
+
+//Session
+Route::get('/login', [Controllers\AuthController::class, 'index'])->name('login');
+Route::post('/auth/user', [Controllers\AuthController::class, 'store']);
+Route::get('/logout', [Controllers\AuthController::class, 'destroy'])->name('logout');
+
+
