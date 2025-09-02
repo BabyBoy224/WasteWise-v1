@@ -9,41 +9,51 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
-     use ValidatesRequests;
+    use ValidatesRequests;
+
+    // Show login page
     public function index()
     {
-        Auth::logout();
+        Auth::logout(); // Ensure user is logged out
         return view('login');
     }
 
-        public function store(Request $request)
-        {
-        $this->validate($request,[
-        'username' => 'required',
-        'password' => 'required'
-        ]);
-                $credentials = $request->only('username', 'password');
-
-        if(! Auth::attempt( $credentials ) ) {
-        return back()->withErrors('Invalid credentials')->withInput($request->all);
-        }
-        // Set session variable
-        Session::put('username', $request->username);
-        Session::put('password', $request->password);
-
-        // Retrieve session variable
-        $username = Session::get('username');
-        $password = Session::get('password');
-
-        return redirect('/dashboard');
-        }
-
-    public function destroy()
+    // Handle login submission
+    public function store(Request $request)
     {
-        $user = User::where('id', Auth::id())->first();
+        // Validate input
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|min:5'
+        ]);
 
-        Auth::logout();
-        return redirect('/login');
+        $credentials = $request->only('username', 'password');
+
+        // Attempt login
+        if (!Auth::attempt($credentials)) {
+            return back()
+                ->withErrors(['login_error' => 'Invalid username or password'])
+                ->withInput($request->only('username'));
+        }
+
+        // Regenerate session to prevent fixation attacks
+        $request->session()->regenerate();
+
+        // Optional: store username in session
+        Session::put('username', $request->username);
+
+        return redirect()->intended('/dashboard');
     }
 
+    // Handle logout
+    public function destroy(Request $request)
+    {
+        Auth::logout();
+
+        // Invalidate session
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login');
+    }
 }
