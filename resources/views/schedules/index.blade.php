@@ -58,7 +58,7 @@
                                 <td>{{ $barangay->name }}</td>
                                 @if ($barangay->schedule)
                                     <td>{{ $barangay->schedule->dayOfWeek }}</td>
-                                    <td>{{ $barangay->schedule->lastVisited ? \Carbon\Carbon::parse($barangay->schedule->lastVisited)->format('Y-m-d') : '—' }}
+                                    <td>{{ $barangay->schedule->lastVisited ? \Carbon\Carbon::parse($barangay->schedule->lastVisited)->format('M j, Y') : '—' }}
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ route('schedules.edit', $barangay->schedule->id) }}"

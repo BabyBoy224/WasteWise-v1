@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Barangay;
 use App\Models\Schedule;
+use Carbon\Carbon;
 
 
 class ScheduleController extends Controller
@@ -40,6 +41,8 @@ class ScheduleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -49,16 +52,25 @@ class ScheduleController extends Controller
             'lastVisited' => 'nullable|in:Yes,No',
         ]);
 
-        $schedule = Schedule::create([
-            'dayOfWeek' => $validated['dayOfWeek'],
-            'lastVisited' => $validated['lastVisited'] === 'Yes',
-        ]);
+        // If lastVisited is Yes, compute the date of the last occurrence of the given dayOfWeek
+        $lastVisitedDate = null;
+        if ($validated['lastVisited'] === 'Yes') {
+            $dayOfWeek = ucfirst(strtolower($validated['dayOfWeek'])); // Normalize (e.g. Monday)
+            $lastVisitedDate = Carbon::now()->previous($dayOfWeek)->toDateString();
+        }
 
-        $schedule->barangays()->attach($validated['barangay_ids']);
+        foreach ($validated['barangay_ids'] as $barangayId) {
+            Schedule::create([
+                'barangayId' => $barangayId,
+                'dayOfWeek' => $validated['dayOfWeek'],
+                'lastVisited' => $lastVisitedDate,
+            ]);
+        }
 
         return redirect()->route('schedules.index')
-            ->with('success', 'Schedule created successfully!');
+            ->with('success', 'Schedules created successfully!');
     }
+
 
     /**
      * Display the specified resource.
@@ -71,24 +83,53 @@ class ScheduleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $schedule = Schedule::findOrFail($id);
+        $barangays = Barangay::all();
+
+        return view('schedules.edit', compact('schedule', 'barangays'));
     }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'dayOfWeek' => 'required|string',
+            'lastVisited' => 'nullable|in:Yes,No',
+        ]);
+
+        $schedule = Schedule::findOrFail($id);
+
+        // Handle lastVisited as date
+        $lastVisited = null;
+        if ($validated['lastVisited'] === 'Yes') {
+            $lastVisited = \Carbon\Carbon::parse('last ' . $validated['dayOfWeek'])->toDateString();
+        }
+
+        $schedule->update([
+            'dayOfWeek' => $validated['dayOfWeek'],
+            'lastVisited' => $lastVisited,
+        ]);
+
+        return redirect()->route('schedules.index')
+            ->with('success', 'Schedule updated successfully!');
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $schedule = Schedule::findOrFail($id);
+        $schedule->delete();
+
+        return redirect()->route('schedules.index')
+            ->with('success', 'Schedule deleted successfully.');
     }
+
 }

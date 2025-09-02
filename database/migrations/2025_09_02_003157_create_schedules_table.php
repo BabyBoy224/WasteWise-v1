@@ -10,22 +10,22 @@ return new class extends Migration {
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('barangayId');
             $table->string('dayOfWeek');
-            $table->boolean('lastVisited')->nullable();
+            $table->date('lastVisited')->nullable();
             $table->timestamps();
-        });
 
-        Schema::create('barangay_schedule', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('schedule_id')->constrained()->onDelete('cascade');
-            $table->foreignId('barangay_id')->constrained()->onDelete('cascade');
+            $table->foreign('barangayId')
+                ->references('id')
+                ->on('barangays')
+                ->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('barangay_schedule');
         Schema::dropIfExists('schedules');
     }
 };
+
 

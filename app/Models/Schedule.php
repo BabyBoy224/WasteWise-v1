@@ -10,7 +10,7 @@ class Schedule extends Model
 {
      use HasFactory;
 
-    protected $fillable = ['dayOfWeek', 'lastVisited'];
+    protected $fillable = ['barangayId', 'dayOfWeek', 'lastVisited'];
     public function barangay()
 {
     return $this->belongsTo(\App\Models\Barangay::class, 'barangayId');
